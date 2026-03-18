@@ -9,7 +9,8 @@ var cors = require("cors");
 
 var indexRouter = require('./routes/index');
 var userRouter = require('./routes/user');
-
+var attendanceRouter = require('./routes/attendance');
+var companyRouter = require('./routes/company')
 
 
 
@@ -43,7 +44,13 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, "public")));
 
 app.use('/', indexRouter);
-app.use('/users', userRouter);
+app.use('/api/users', userRouter);
+
+// attendance
+app.use('/api/attendance',attendanceRouter);
+
+//company
+app.use('/api/company',companyRouter);
 
 
 
