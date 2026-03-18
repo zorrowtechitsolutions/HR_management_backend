@@ -9,7 +9,10 @@ var cors = require("cors");
 
 var indexRouter = require('./routes/index');
 var userRouter = require('./routes/user');
-var userProfileRouter = require('./routes/userProfile')
+
+var userProfileRouter = require('./routes/userProfile');
+var attendanceRouter = require('./routes/attendance');
+var companyRouter = require('./routes/company')
 
 
 
@@ -47,6 +50,12 @@ app.use(express.static(path.join(__dirname, "public")));
 app.use('/', indexRouter);
 app.use('/api/users', userRouter);
 app.use('/api/users',userProfileRouter)
+// attendance
+app.use('/api/attendance',attendanceRouter);
+
+//company
+app.use('/api/company',companyRouter);
+
 
 
 
