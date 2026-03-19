@@ -12,7 +12,9 @@ var userRouter = require('./routes/user');
 
 var userProfileRouter = require('./routes/userProfile');
 var attendanceRouter = require('./routes/attendance');
-var companyRouter = require('./routes/company')
+var companyRouter = require('./routes/company');
+var leaveTypeRouter = require('./routes/leaveType');
+var leaveRequestRouter = require('./routes/leaveRequest');
 
 
 
@@ -55,6 +57,12 @@ app.use('/api/attendance',attendanceRouter);
 
 //company
 app.use('/api/company',companyRouter);
+
+//leave Type
+app.use('/api/leaveType',leaveTypeRouter);
+
+//leave request
+app.use('/api/leaveRequest',leaveRequestRouter);
 
 
 
