@@ -14,7 +14,10 @@ var attendanceRouter = require('./routes/attendance');
 var companyRouter = require('./routes/company')
 var holidayRouter = require("./routes/holidays");
 var departmentRouter = require("./routes/department");
-const departmentHeadRoutes = require("./routes/departmenthead");
+var departmentHeadRoutes = require("./routes/departmenthead");
+var departmentBudgetRoutes = require("./routes/departmentbudget");
+var departmentPerformanceRoutes = require("./routes/departmentperformance");
+
 
 
 
@@ -23,6 +26,7 @@ const departmentHeadRoutes = require("./routes/departmenthead");
 
 
 var connectDB = require("./config/db");
+const DepartmentPerformance = require('./models/DepartmentPerformance');
 
 
 // Connect to database
@@ -65,6 +69,10 @@ app.use("/api/holidays", holidayRouter);
 app.use("/api/department", departmentRouter);
 //department head
 app.use("/api/department-heads",departmentHeadRoutes);
+//department budget
+app.use("/api/department-budget",departmentBudgetRoutes)
+//department performnace
+app.use("/api/department-performance",departmentPerformanceRoutes)
 
 
 
