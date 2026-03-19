@@ -1,234 +1,190 @@
-const DepartmentHead = require("../models/DepartmentHead");
-const Department = require("../models/Department");
+const Holiday = require("../models/Holidays");
 const asyncHandler = require("express-async-handler");
 
 
-/* CREATE DEPARTMENT HEAD */
+// Get all holidays
+exports.getHolidays = asyncHandler(async (req, res) => {
 
-exports.createDepartmentHead = asyncHandler(async (req, res) => {
+  const holidays = await Holiday.find({ isActive: true })
+    .sort({ date: 1 });
 
- let {
-  companyId,
-  departmentId,
-  name,
-  designation,
-  phone,
-  email,
-  joiningDate
- } = req.body;
-
-
- // TRIM VALUES
- name = name?.trim();
- designation = designation?.trim();
- phone = phone?.trim();
- email = email?.trim();
-
-
- // EMPTY VALIDATION (AFTER TRIM)
- if (!name || !departmentId || !designation || !phone || !email || !joiningDate) {
-  return res.status(400).json({
-   success: false,
-   message: "All fields are required"
+  res.status(200).json({
+    success: true,
+    data: holidays
   });
- }
-
-
- // PHONE VALIDATION
- const phoneRegex = /^[0-9]{10}$/;
-
- if (!phoneRegex.test(phone)) {
-  return res.status(400).json({
-   success: false,
-   message: "Phone must be exactly 10 digits"
-  });
- }
-
-
- // EMAIL VALIDATION
- const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
- if (!emailRegex.test(email)) {
-  return res.status(400).json({
-   success: false,
-   message: "Invalid email format"
-  });
- }
-
-
- // CHECK DEPARTMENT EXISTS
- const department = await Department.findById(departmentId);
-
- if (!department) {
-  return res.status(404).json({
-   success: false,
-   message: "Department not found"
-  });
- }
-
-
- const departmentHead = new DepartmentHead({
-  companyId,
-  departmentId,
-  name,
-  designation,
-  phone,
-  email,
-  joiningDate
- });
-
-
- const savedHead = await departmentHead.save();
-
-
- res.status(201).json({
-  success: true,
-  message: "Department head created successfully",
-  data: savedHead
- });
 
 });
 
 
+// Get holiday by id
+exports.getHolidayById = asyncHandler(async (req, res) => {
 
-/* GET ALL DEPARTMENT HEADS */
+  const holiday = await Holiday.findById(req.params.id);
 
-exports.getDepartmentHeads = asyncHandler(async (req, res) => {
-
- const heads = await DepartmentHead.find({ isActive: true })
-  .populate("departmentId", "departmentName")
-  .sort({ createdAt: -1 });
-
-
- const formatted = heads.map(head => ({
-  _id: head._id,
-  name: head.name,
-  department: head.departmentId?.departmentName,
-  designation: head.designation,
-  phone: head.phone,
-  email: head.email,
-  joiningDate: head.joiningDate
- }));
-
-
- res.status(200).json({
-  success: true,
-  data: formatted
- });
-
-});
-
-
-
-/* GET BY ID */
-
-exports.getDepartmentHeadById = asyncHandler(async (req, res) => {
-
- const head = await DepartmentHead.findById(req.params.id)
-  .populate("departmentId", "departmentName");
-
-
- if (!head) {
-  return res.status(404).json({
-   success: false,
-   message: "Department head not found"
-  });
- }
-
-
- res.status(200).json({
-  success: true,
-  data: head
- });
-
-});
-
-
-
-/* UPDATE */
-
-exports.updateDepartmentHead = asyncHandler(async (req, res) => {
-
- let { name, designation, phone, email } = req.body;
-
-
- // TRIM VALUES
- if (name) name = name.trim();
- if (designation) designation = designation.trim();
- if (phone) phone = phone.trim();
- if (email) email = email.trim();
-
-
- // PHONE VALIDATION
- if (phone) {
-  const phoneRegex = /^[0-9]{10}$/;
-
-  if (!phoneRegex.test(phone)) {
-   return res.status(400).json({
-    success: false,
-    message: "Phone must be exactly 10 digits"
-   });
+  if (!holiday || !holiday.isActive) {
+    return res.status(404).json({
+      success: false,
+      message: "Holiday not found"
+    });
   }
- }
 
-
- // EMAIL VALIDATION
- if (email) {
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-  if (!emailRegex.test(email)) {
-   return res.status(400).json({
-    success: false,
-    message: "Invalid email format"
-   });
-  }
- }
-
-
- const updated = await DepartmentHead.findByIdAndUpdate(
-  req.params.id,
-  {
-   ...req.body,
-   name,
-   designation,
-   phone,
-   email
-  },
-  { new: true }
- );
-
-
- res.status(200).json({
-  success: true,
-  message: "Department head updated successfully",
-  data: updated
- });
+  res.status(200).json({
+    success: true,
+    data: holiday
+  });
 
 });
 
 
+// Create holiday
+exports.createHoliday = asyncHandler(async (req, res) => {
 
-/* DELETE */
+  let {
+    holidayName,
+    date,
+    location,
+    shift,
+    details,
+    holidayType,
+    createdBy
+  } = req.body;
 
-exports.deleteDepartmentHead = asyncHandler(async (req, res) => {
+  // TRIM STRING VALUES
+  holidayName = holidayName?.trim();
+  location = location?.trim();
+  shift = shift?.trim();
+  details = details?.trim();
+  holidayType = holidayType?.trim();
+  createdBy = createdBy?.trim();
 
- const head = await DepartmentHead.findById(req.params.id);
 
- if (!head) {
-  return res.status(404).json({
-   success: false,
-   message: "Department head not found"
+  // Required validation
+  if (!holidayName || !date) {
+    return res.status(400).json({
+      success: false,
+      message: "Holiday name and date are required"
+    });
+  }
+
+
+  // Enum validation
+  const validShifts = ["All Shifts", "Day Shifts", "Night Shifts"];
+  const validTypes = ["National", "Religious", "Cultural", "Awareness", "Environmental", "Health"];
+
+
+  if (shift && !validShifts.includes(shift)) {
+    return res.status(400).json({
+      success: false,
+      message: "Invalid shift value"
+    });
+  }
+
+
+  if (holidayType && !validTypes.includes(holidayType)) {
+    return res.status(400).json({
+      success: false,
+      message: "Invalid holiday type"
+    });
+  }
+
+
+  const holiday = await Holiday.create({
+    holidayName,
+    date,
+    location,
+    shift,
+    details,
+    holidayType,
+    createdBy
   });
- }
-
- head.isActive = false;
-
- await head.save();
 
 
- res.status(200).json({
-  success: true,
-  message: "Department head deleted successfully"
- });
+  res.status(201).json({
+    success: true,
+    message: "Holiday created successfully",
+    data: holiday
+  });
+
+});
+
+
+// Update holiday
+exports.updateHoliday = asyncHandler(async (req, res) => {
+
+  const holiday = await Holiday.findById(req.params.id);
+
+  if (!holiday) {
+    return res.status(404).json({
+      success: false,
+      message: "Holiday not found"
+    });
+  }
+
+
+  // TRIM UPDATE VALUES
+  if (req.body.holidayName) req.body.holidayName = req.body.holidayName.trim();
+  if (req.body.location) req.body.location = req.body.location.trim();
+  if (req.body.shift) req.body.shift = req.body.shift.trim();
+  if (req.body.details) req.body.details = req.body.details.trim();
+  if (req.body.holidayType) req.body.holidayType = req.body.holidayType.trim();
+  if (req.body.createdBy) req.body.createdBy = req.body.createdBy.trim();
+
+
+  const validShifts = ["All Shifts", "Day Shifts", "Night Shifts"];
+  const validTypes = ["National", "Religious", "Cultural", "Awareness", "Environmental", "Health"];
+
+
+  if (req.body.shift && !validShifts.includes(req.body.shift)) {
+    return res.status(400).json({
+      success: false,
+      message: "Invalid shift value"
+    });
+  }
+
+
+  if (req.body.holidayType && !validTypes.includes(req.body.holidayType)) {
+    return res.status(400).json({
+      success: false,
+      message: "Invalid holiday type"
+    });
+  }
+
+
+  const updatedHoliday = await Holiday.findByIdAndUpdate(
+    req.params.id,
+    req.body,
+    { new: true, runValidators: true }
+  );
+
+
+  res.status(200).json({
+    success: true,
+    message: "Holiday updated successfully",
+    data: updatedHoliday
+  });
+
+});
+
+
+// Delete holiday (soft delete)
+exports.deleteHoliday = asyncHandler(async (req, res) => {
+
+  const holiday = await Holiday.findById(req.params.id);
+
+  if (!holiday) {
+    return res.status(404).json({
+      success: false,
+      message: "Holiday not found"
+    });
+  }
+
+  holiday.isActive = false;
+
+  await holiday.save();
+
+  res.status(200).json({
+    success: true,
+    message: "Holiday deleted successfully"
+  });
 
 });
