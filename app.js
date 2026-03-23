@@ -9,14 +9,23 @@ var cors = require("cors");
 
 var indexRouter = require('./routes/index');
 var userRouter = require('./routes/user');
+var userProfileRouter = require('./routes/userProfile');
 var attendanceRouter = require('./routes/attendance');
-var companyRouter = require('./routes/company')
-
-
+var companyRouter = require('./routes/company');
+var leaveTypeRouter = require('./routes/leaveType');
+var leaveRequestRouter = require('./routes/leaveRequest');
+var leaveBalanceRouter = require('./routes/leaveBalance');
+var companyDetailsRouter = require('./routes/companyDetails');
+var holidayRouter = require("./routes/holidays");
+var departmentRouter = require("./routes/department");
+var departmentHeadRoutes = require("./routes/departmenthead");
+var departmentBudgetRoutes = require("./routes/departmentbudget");
+var departmentPerformanceRoutes = require("./routes/departmentperformance");
 
 
 
 var connectDB = require("./config/db");
+
 
 // Connect to database
 connectDB();
@@ -44,13 +53,36 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, "public")));
 
 app.use('/', indexRouter);
+//users
 app.use('/api/users', userRouter);
-
+//userprofile
+app.use('/api/users',userProfileRouter)
 // attendance
 app.use('/api/attendance',attendanceRouter);
-
 //company
 app.use('/api/company',companyRouter);
+//holiday
+app.use("/api/holidays", holidayRouter);
+//department
+app.use("/api/department", departmentRouter);
+//department head
+app.use("/api/department-heads",departmentHeadRoutes);
+//department budget
+app.use("/api/department-budget",departmentBudgetRoutes)
+//department performnace
+app.use("/api/department-performance", departmentPerformanceRoutes)
+
+//leave Type
+app.use('/api/leaveType',leaveTypeRouter);
+
+//leave request
+app.use('/api/leaveRequest',leaveRequestRouter);
+
+//leave balance
+app.use('/api/leaveBalance', leaveBalanceRouter);
+
+//company Details
+app.use('/api/companyDetails',companyDetailsRouter);
 
 
 

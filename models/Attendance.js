@@ -2,11 +2,19 @@ const mongoose = require("mongoose");
 
 const attendanceSchema = new mongoose.Schema({
 
-  userId: {
+  companyId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Company",
+    required: true
+  },
+
+    userId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
     required: true
   },
+
+
 
   firstIn: {
     type: String
