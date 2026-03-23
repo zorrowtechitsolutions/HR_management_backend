@@ -6,6 +6,7 @@ const asyncHandler = require("express-async-handler");
 exports.getUserProfile = asyncHandler(async (req, res) => {
 
   const user = await UserModel.findById(req.params.id)
+  .populate("companyId")
     .select("-password");
 
   if (!user) {

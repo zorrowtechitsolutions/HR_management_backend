@@ -9,12 +9,15 @@ var cors = require("cors");
 
 var indexRouter = require('./routes/index');
 var userRouter = require('./routes/user');
-
 var userProfileRouter = require('./routes/userProfile');
 var attendanceRouter = require('./routes/attendance');
 var companyRouter = require('./routes/company');
 var leaveTypeRouter = require('./routes/leaveType');
-var leaveRequestRouter = require('./routes/leaveRequest');
+// var leaveRequestRouter = require('./routes/leaveRequest');
+var holidayRouter = require("./routes/holidays");
+// var leaveBalanceRouter = require("./routes/leaveBalance");
+var companyDetailsRouter = require('./routes/companyDetails');
+
 
 
 
@@ -50,20 +53,31 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, "public")));
 
 app.use('/', indexRouter);
+//users
 app.use('/api/users', userRouter);
+//userprofile
 app.use('/api/users',userProfileRouter)
 // attendance
 app.use('/api/attendance',attendanceRouter);
-
 //company
 app.use('/api/company',companyRouter);
+//holiday
+app.use("/api/holidays", holidayRouter);
 
 //leave Type
 app.use('/api/leaveType',leaveTypeRouter);
 
 //leave request
-app.use('/api/leaveRequest',leaveRequestRouter);
+// app.use('/api/leaveRequest',leaveRequestRouter);
 
+//leave balance
+// app.use('/api/leaveBalance', leaveBalanceRouter);
+
+app.use("/api/leaveRequest", require("./routes/leaveRequest"));
+app.use("/api/leaveBalance", require("./routes/leaveBalance"));
+
+//company Details\
+app.use('/api/companyDetails',companyDetailsRouter);
 
 
 

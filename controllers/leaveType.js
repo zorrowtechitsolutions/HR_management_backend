@@ -64,7 +64,7 @@ exports.createLeaveType = asyncHandler(async (req, res) => {
 // GET ALL LEAVES
 exports.getLeaveTypes = asyncHandler(async (req, res) => {
 
-    const leaves = await LeaveType.find();
+    const leaves = await LeaveType.find().populate("companyId");
 
     res.status(200).json({
         success: true,

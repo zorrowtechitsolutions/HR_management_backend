@@ -2,6 +2,12 @@ const mongoose = require("mongoose");
 
 const UserSchema = new mongoose.Schema(
 {
+    companyId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Company",
+      required: true
+    },
+  
   firstName: {
     type: String,
     required: true,
@@ -56,7 +62,6 @@ const UserSchema = new mongoose.Schema(
       type: String
     }
   ],
-
   dateOfBirth: Date,
 
   joiningDate: Date,

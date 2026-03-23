@@ -1,134 +1,110 @@
 const asyncHandler = require("express-async-handler");
 const LeaveRequest = require("../models/leaveRequest");
+const LeaveBalance = require("../models/leaveBalance");
+const CompanyPolicy = require("../models/companyDetails");
 
 // CREATE LEAVE REQUEST
-
 exports.createLeaveRequest = asyncHandler(async (req, res) => {
 
-const { name, leaveType, leaveFrom, leaveTo, noOfDays, status, reason } = req.body;
+    const { userId, companyId,  leaveType, leaveFrom, leaveTo, noOfDays, reason } = req.body;
 
-// Required fields
-if (!name || !leaveType || !leaveFrom || !leaveTo || !noOfDays) {
-    res.status(400);
-    throw new Error("name, leaveType, leaveFrom, leaveTo and noOfDays are required");
-}
+    if (!userId || !companyId || !leaveType || !leaveFrom || !leaveTo || !noOfDays) {
+        res.status(400);
+        throw new Error("All required fields must be provided");
+    }
 
-// leaveType enum validation
-const validLeaveTypes = ["Emergency", "Family", "Sick", "Casual"];
-if (!validLeaveTypes.includes(leaveType)) {
-    res.status(400);
-    throw new Error("Invalid leaveType");
-}
+    const leave = await LeaveRequest.create(req.body);
 
-// status enum validation
-if (status && !["Pending", "Approved", "Rejected"].includes(status)) {
-    res.status(400);
-    throw new Error("Status must be Pending, Approved or Rejected");
-}
-
-// date validation
-if (new Date(leaveFrom) > new Date(leaveTo)) {
-    res.status(400);
-    throw new Error("leaveFrom cannot be greater than leaveTo");
-}
-
-// days validation
-if (noOfDays <= 0) {
-    res.status(400);
-    throw new Error("noOfDays must be greater than 0");
-}
-
-// reason validation
-if (!reason || reason.trim() === "") {
-    res.status(400);
-    throw new Error("Reason is required");
-}
-
-const leave = await LeaveRequest.create(req.body);
-
-res.status(201).json({
-success: true,
-message: "Leave request created",
-data: leave
-});
-
+    res.status(201).json({
+        success: true,
+        message: "Leave request created",
+        data: leave
+    });
 });
 
 
-
-// GET ALL LEAVE REQUESTS
-exports.getLeaveRequests = asyncHandler(async (req, res) => {
-
-const leaves = await LeaveRequest.find();
-
-res.status(200).json({
-success: true,
-count: leaves.length,
-data: leaves
-});
-
-});
-
-
-// GET SINGLE LEAVE REQUEST
-exports.getLeaveRequestById = asyncHandler(async (req, res) => {
-
-const leave = await LeaveRequest.findById(req.params.id);
-
-if(!leave){
-res.status(404);
-throw new Error("Leave request not found");
-}
-
-res.status(200).json({
-success: true,
-data: leave
-});
-
-});
-
-
-// UPDATE LEAVE REQUEST
+// UPDATE LEAVE REQUEST (AUTO BALANCE)
 exports.updateLeaveRequest = asyncHandler(async (req, res) => {
+    
 
-const leave = await LeaveRequest.findById(req.params.id);
+    const leave = await LeaveRequest.findById(req.params.id);
+    
 
-if(!leave){
-res.status(404);
-throw new Error("Leave request not found");
-}
+    if (!leave) {
+        res.status(404);
+        throw new Error("Leave request not found");
+    }
 
+    leave.status = req.body.status;
+    leave.manageId = req.body.manageId;
+    leave.manageRole = req.body.manageRole;
 
-const updatedLeave = await LeaveRequest.findByIdAndUpdate(
-req.params.id,
-req.body,
-{ new: true, runValidators: true }
-);
+   await leave.save();
+    
 
-res.status(200).json({
-success: true,
-message: "Leave request updated",
-data: updatedLeave
-});
+    const year = new Date(leave.leaveFrom).getFullYear();
 
-});
+    let balance = await LeaveBalance.findOne({
+        userId: leave.userId,
+        year: year
+    });
 
+    // CREATE IF NOT EXISTS
+    if (!balance) {
 
-// DELETE LEAVE REQUEST
-exports.deleteLeaveRequest = asyncHandler(async (req, res) => {
+        const companyPolicy = await CompanyPolicy.findOne({
+            companyId: leave.companyId
+        });
 
-const leave = await LeaveRequest.findById(req.params.id);
+        if (!companyPolicy) {
+            res.status(404);
+            throw new Error("Company policy not found");
+        }
 
-if(!leave){
-res.status(404);
-throw new Error("Leave request not found");
-}
+        balance = new LeaveBalance({
+            userId: leave.userId,
+            companyId: leave.companyId,
+            year: year,
+            previousBalance: 0,
+            currentBalance: companyPolicy.annualLeave,
+            totalBalance: companyPolicy.annualLeave,
+            usedLeave: 0,
+            acceptedLeave: 0,
+            rejectedLeave: 0,
+            expiredLeave: 0,
+            carryOverBalance: 0
+        });
+    }
+    
+    // APPROVED
+    if (req.body.status === "Approved") {
+    if (balance.currentBalance < leave.noOfDays) {
+            res.status(400);
+            throw new Error("Insufficient balance");
+        }
 
-await leave.deleteOne();
+        balance.currentBalance -= leave.noOfDays;
+        balance.totalBalance -= leave.noOfDays;
+        balance.usedLeave += leave.noOfDays;
+        balance.acceptedLeave += leave.noOfDays;
+    }
 
-res.status(200).json({
-success: true,
-message: "Leave request deleted"
-});
+    // REJECTED
+    if (req.body.status === "Rejected") {
+        balance.rejectedLeave += leave.noOfDays;
+    }
 
+    await balance.save();
+
+    const updatedLeave = await LeaveRequest.findByIdAndUpdate(
+        req.params.id,
+        req.body,
+        { new: true }
+    );
+
+    res.status(200).json({
+        success: true,
+        message: "Leave updated",
+        data: updatedLeave
+    });
 });

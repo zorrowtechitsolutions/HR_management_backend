@@ -2,10 +2,19 @@ const mongoose = require("mongoose");
 
 const leaveRequestSchema = new mongoose.Schema({
 
-  name: {
-    type: String,
+    companyId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Company",
+      required: true
+    },
+
+    userId: {   
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
     required: true
   },
+
+
 
   leaveType: {
     type: String,
@@ -33,6 +42,16 @@ const leaveRequestSchema = new mongoose.Schema({
     enum: ["Pending", "Approved", "Rejected"],
     default: "Pending"
   },
+
+  manageId :{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User"
+  },
+
+  manageRole: {
+  type: String,
+  enum: ["HR", "Manager", "Admin"]
+},
 
   reason: {
     type: String

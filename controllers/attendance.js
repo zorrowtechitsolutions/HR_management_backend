@@ -9,6 +9,7 @@ exports.getAttendance = asyncHandler(async (req, res) => {
   const data = await AttendanceModel
     .find()
     .populate("userId")
+    .populate("companyId")
     .sort({ createdAt: -1 });
 
   res.status(200).json(data);

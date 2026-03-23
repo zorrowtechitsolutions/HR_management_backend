@@ -2,6 +2,13 @@ const mongoose = require("mongoose");
 
 const leaveTypeSchema = new mongoose.Schema(
 {
+
+      companyId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Company",
+        required: true
+      },
+    
     leaveName: {
         type: String,
         required: true

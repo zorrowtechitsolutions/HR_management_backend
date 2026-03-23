@@ -8,6 +8,7 @@ const bcrypt = require("bcrypt");
 exports.getUsers = asyncHandler(async (req, res) => {
 
   const users = await UserModel.find({ isActive: true })
+    .populate("companyId")
     .select("-password")
     .sort({ createdAt: -1 });
 
