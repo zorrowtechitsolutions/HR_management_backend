@@ -70,13 +70,13 @@ const UserSchema = new mongoose.Schema(
 
   workLocation: {
     type: String,
-    enum: ["Office", "Work from Home"]
+    enum: ["Office", "Remote","Hybrid"]
   },
 
   status: {
     type: String,
-    enum: ["Active", "Inactive", "On Leave"],
-    default: "Active"
+    enum: ["On Duty","On Leave"],
+    default: "On Duty"
   },
 
   // image: String,

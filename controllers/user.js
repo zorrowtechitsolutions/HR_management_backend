@@ -6,31 +6,16 @@ const bcrypt = require("bcrypt");
 // GET USERS
 exports.getUsers = asyncHandler(async (req, res) => {
 
-  const users = await UserModel.find({ isActive: true })
+  const users = await UserModel.find()
     .populate("companyId")
     .select("-password")
     .sort({ createdAt: -1 });
 
-  const formattedUsers = users.map(user => ({
-    _id: user._id,
-    name: `${user.firstName} ${user.lastName || ""}`.trim(),
-    gender: user.gender,
-    mobile: user.mobile,
-    email: user.email,
-    role: user.role,
-    department: user.department,
-    designation: user.designation,
-    address: user.address,
-    workLocation: user.workLocation,
-    joiningDate: user.joiningDate
-      ? user.joiningDate.toISOString().split("T")[0]
-      : null,
-    status: user.status
-  }));
+
 
   res.status(200).json({
     success: true,
-    data: formattedUsers
+    users
   });
 
 });
@@ -57,8 +42,12 @@ exports.createUsers = asyncHandler(async (req, res) => {
     lastPromotionDate,
     workLocation,
     status,
-    skills
+    skills,
+    companyId
   } = req.body;
+
+ 
+  
 
 
   // TRIM STRING VALUES
@@ -76,10 +65,10 @@ exports.createUsers = asyncHandler(async (req, res) => {
 
 
   // REQUIRED VALIDATION
-  if (!firstName || !mobile || !email || !password) {
+  if (!firstName || !mobile || !email || !password || !companyId) {
     return res.status(400).json({
       success: false,
-      message: "firstName, mobile, email and password are required"
+      message: "firstName, mobile, email, company id and password are required"
     });
   }
 
@@ -104,6 +93,8 @@ exports.createUsers = asyncHandler(async (req, res) => {
       message: "Mobile already exists"
     });
   }
+
+  
 
 
   // HASH PASSWORD
@@ -130,10 +121,14 @@ exports.createUsers = asyncHandler(async (req, res) => {
     lastPromotionDate,
     workLocation,
     status,
-    skills: skills || []
+    skills: skills || [],
+    companyId
   });
 
+  
+
   const savedUser = await user.save();
+  
 
 
   res.status(201).json({
@@ -213,7 +208,7 @@ exports.updateUsers = asyncHandler(async (req, res) => {
 // DELETE USER
 exports.deleteUsers = asyncHandler(async (req, res) => {
 
-  const user = await UserModel.findById(req.params.id);
+  const user = await UserModel.findByIdAndDelete(req.params.id);
 
   if (!user) {
     return res.status(404).json({
@@ -222,14 +217,9 @@ exports.deleteUsers = asyncHandler(async (req, res) => {
     });
   }
 
-  user.isActive = false;
-  user.status = "Inactive";
-
-  await user.save();
-
   res.status(200).json({
     success: true,
-    message: "Employee deleted successfully"
+    message: "Employee deleted permanently"
   });
 
 });
