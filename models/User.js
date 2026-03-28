@@ -79,6 +79,21 @@ const UserSchema = new mongoose.Schema(
     default: "On Duty"
   },
 
+   totalProjects: {
+    type: Number,
+    default: 0
+  },
+
+  completedProjects: {
+    type: Number,
+    default: 0
+  },
+
+  rating: {
+    type: Number,
+    default: 0
+  },
+
   // image: String,
 
   isActive: {

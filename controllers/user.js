@@ -1,6 +1,8 @@
 const UserModel = require("../models/User");
 const asyncHandler = require("express-async-handler");
 const bcrypt = require("bcrypt");
+const mongoose = require("mongoose");
+
 
 
 // GET USERS
@@ -220,6 +222,54 @@ exports.deleteUsers = asyncHandler(async (req, res) => {
   res.status(200).json({
     success: true,
     message: "Employee deleted permanently"
+  });
+
+});
+
+
+
+// ✅ ADD THIS FULL FUNCTION
+exports.getUserProfile = asyncHandler(async (req, res) => {
+
+  const { id } = req.params;
+
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return res.status(400).json({
+      success: false,
+      message: "Invalid employee ID"
+    });
+  }
+
+  const user = await UserModel.findById(id).select("-password");
+
+  if (!user) {
+    return res.status(404).json({
+      success: false,
+      message: "Employee not found"
+    });
+  }
+
+  const profileData = {
+    _id: user._id,
+    name: `${user.firstName || ""} ${user.lastName || ""}`.trim(),
+    designation: user.designation,
+    department: user.department,
+    email: user.email,
+    mobile: user.mobile,
+    address: user.address,
+    about: user.about || "",
+    education: user.education || "",
+    experience: user.experience || "",
+    skills: user.skills || [],
+    image: user.image || "",
+     totalProjects: user.totalProjects || 0,
+  completedProjects: user.completedProjects || 0,
+  rating: user.rating || 0
+  };
+
+  res.status(200).json({
+    success: true,
+    data: profileData
   });
 
 });

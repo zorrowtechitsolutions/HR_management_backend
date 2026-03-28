@@ -7,6 +7,8 @@ const mongoose = require("mongoose");
 exports.getUserProfile = asyncHandler(async (req, res) => {
 
   const { id } = req.params;
+  console.log(req.params);
+  
 
   // ID validation
   if (!mongoose.Types.ObjectId.isValid(id)) {
